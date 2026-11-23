@@ -84,20 +84,37 @@ public final class FinanceService {
             case ADMIN_CONFIG -> configure(player, (int) payload.amount(), (int) payload.duration());
             case CONVERT_COLLECTIBLE -> convertCollectible(player, (int) payload.amount());
             case CONVERT_ALL_COLLECTIBLES -> convertAllCollectibles(player);
-            case REQUEST_COLLECTION -> sendCollection(player, (int) payload.amount());
+            case REQUEST_COLLECTION -> sendCollection(player, (int) payload.amount(), payload.target());
         }
     }
 
     public static void sendCollection(ServerPlayer player) {
-        sendCollection(player, 0);
+        sendCollection(player, 0, "");
     }
 
     public static void sendCollection(ServerPlayer player, int page) {
+        sendCollection(player, page, "");
+    }
+
+    public static void sendCollection(ServerPlayer player, int page, String filter) {
         FinanceData data = data(player);
-        int total = data.collectionSize();
+        String rawFilter = filter == null ? "" : filter.trim().toLowerCase(Locale.ROOT);
+        if (rawFilter.length() > 16) {
+            rawFilter = rawFilter.substring(0, 16);
+        }
+        final String safeFilter = rawFilter;
+
+        List<CollectionEntry> matches = data.collectionEntries().stream()
+                .filter(entry -> safeFilter.isEmpty()
+                        || entry.addedBy().toLowerCase(Locale.ROOT).contains(safeFilter))
+                .collect(Collectors.toList());
+
+        int total = matches.size();
         int pageCount = Math.max(1, (total + COLLECTION_PAGE_SIZE - 1) / COLLECTION_PAGE_SIZE);
         int safePage = Math.max(0, Math.min(page, pageCount - 1));
-        List<CollectionPayload.EntryView> views = data.collectionPage(safePage, COLLECTION_PAGE_SIZE).stream()
+        int from = safePage * COLLECTION_PAGE_SIZE;
+        int to = Math.min(total, from + COLLECTION_PAGE_SIZE);
+        List<CollectionPayload.EntryView> views = matches.subList(from, to).stream()
                 .map(CollectionPayload.EntryView::from)
                 .collect(Collectors.toList());
         ModNetwork.sendToPlayer(player, new CollectionPayload(safePage, pageCount, total, views));

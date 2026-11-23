@@ -167,6 +167,10 @@ public final class FinanceData extends SavedData {
         return collection.size();
     }
 
+    public List<CollectionEntry> collectionEntries() {
+        return new ArrayList<>(collection);
+    }
+
     public int feePercent() {
         return feePercent;
     }

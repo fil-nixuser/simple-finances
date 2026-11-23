@@ -119,8 +119,10 @@
   "screen.simplefinances.conversion.value": "Даёт %s монет",
 
   "screen.simplefinances.collection.title": "Коллекция сервера: %s",
+  "screen.simplefinances.collection.filter": "Фильтр по игроку",
   "screen.simplefinances.collection.hint": "Наведите на монету, чтобы увидеть подробности",
   "screen.simplefinances.collection.empty": "Коллекция пока пуста",
+  "screen.simplefinances.collection.filter_empty": "По этому фильтру монеты не найдены",
   "screen.simplefinances.collection.refresh": "Обновить",
   "screen.simplefinances.collection.page": "Страница %s/%s",
   "screen.simplefinances.collection.added_by": "Добавил: %s",

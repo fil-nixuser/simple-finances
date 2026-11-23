@@ -119,8 +119,10 @@
   "screen.simplefinances.conversion.value": "Worth %s coins",
 
   "screen.simplefinances.collection.title": "Server collection: %s",
+  "screen.simplefinances.collection.filter": "Filter by player",
   "screen.simplefinances.collection.hint": "Hover over a coin to see its details",
   "screen.simplefinances.collection.empty": "The collection is empty",
+  "screen.simplefinances.collection.filter_empty": "No coins match this filter",
   "screen.simplefinances.collection.refresh": "Refresh",
   "screen.simplefinances.collection.page": "Page %s/%s",
   "screen.simplefinances.collection.added_by": "Added by: %s",
