@@ -103,7 +103,7 @@ public final class ModItems {
             case PERFECT -> Rarity.EPIC;
         };
         Item item = register(name, new SeriesCoinItem(series, condition,
-                new Item.Properties().stacksTo(1).rarity(rarity)));
+                new Item.Properties().stacksTo(64).rarity(rarity)));
         COINS.computeIfAbsent(series, key -> new EnumMap<>(CoinCondition.class)).put(condition, item);
     }
 
