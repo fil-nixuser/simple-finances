@@ -1,12 +1,11 @@
 package com.simplefinances.client.gui;
 
-import com.simplefinances.item.CollectibleCoinItem;
+import com.simplefinances.item.CoinView;
 import com.simplefinances.item.CollectibleInfo;
 import com.simplefinances.item.CollectibleTier;
 import com.simplefinances.net.ActionPayload;
 import com.simplefinances.net.CollectionPayload;
 import com.simplefinances.net.StatePayload;
-import com.simplefinances.registry.ModComponents;
 import com.simplefinances.util.Money;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -21,7 +20,6 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -68,6 +66,10 @@ public final class FinanceScreen extends Screen {
     private int panelY;
     private int panelW;
     private int panelH;
+
+    private int tabColumns = 1;
+    private int tabRows = 1;
+    private int tabWidthPx = 0;
 
     private EditBox depositAmount;
     private EditBox withdrawAmount;
@@ -172,10 +174,27 @@ public final class FinanceScreen extends Screen {
     private void addTabs() {
         List<Tab> tabs = visibleTabs();
         int gap = 4;
-        int tabW = tabWidth();
-        int x = panelX + 12;
+
+        // Localized (especially Russian) tab names are wider than English ones.
+        // Pick as many columns as can show the longest label in full, then wrap
+        // the remaining tabs onto extra rows instead of letting labels overlap.
+        int widest = 0;
         for (Tab value : tabs) {
-            Button button = addButton(x, panelY + 28, tabW, 18,
+            widest = Math.max(widest, font.width(Component.translatable(value.key).getString()));
+        }
+        int needed = widest + 8;
+        int maxPerRow = Math.max(1, (panelW - 24 + gap) / Math.max(1, needed));
+        int rows = (tabs.size() + maxPerRow - 1) / maxPerRow;
+        tabColumns = (tabs.size() + rows - 1) / rows;
+        tabRows = rows;
+        int tabW = (panelW - 24 - (tabColumns - 1) * gap) / tabColumns;
+        tabWidthPx = tabW;
+
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab value = tabs.get(i);
+            int x = panelX + 12 + (i % tabColumns) * (tabW + gap);
+            int y = panelY + 28 + (i / tabColumns) * 20;
+            Button button = addButton(x, y, tabW, 18,
                     Component.translatable(value.key), b -> {
                         if (tab != value) {
                             tab = value;
@@ -183,7 +202,6 @@ public final class FinanceScreen extends Screen {
                         }
                     });
             button.active = value != tab;
-            x += tabW + gap;
         }
     }
 
@@ -360,9 +378,10 @@ public final class FinanceScreen extends Screen {
         graphics.drawString(font, title, panelX + 12, panelY + 8, 0xFFFFFFFF, false);
 
         int tabIndex = visibleTabs().indexOf(tab);
-        if (tabIndex >= 0) {
-            int x = panelX + 12 + tabIndex * (tabWidth() + 4);
-            graphics.fill(x, panelY + 46, x + tabWidth(), panelY + 48, 0xFFFFD700);
+        if (tabIndex >= 0 && tabColumns > 0) {
+            int x = panelX + 12 + (tabIndex % tabColumns) * (tabWidthPx + 4);
+            int underlineY = panelY + 46 + (tabIndex / tabColumns) * 20;
+            graphics.fill(x, underlineY, x + tabWidthPx, underlineY + 2, 0xFFFFD700);
         }
 
         switch (tab) {
@@ -417,10 +436,10 @@ public final class FinanceScreen extends Screen {
         drawWrapped(graphics, Component.translatable("screen.simplefinances.conversion.hint"),
                 x, y + 12, totalW, 0xFF777777);
 
-        List<OwnedCollectible> owned = ownedCollectibles();
+        List<OwnedCoin> owned = ownedCollectibles();
         if (selectedConvertSlot >= 0) {
             boolean found = false;
-            for (OwnedCollectible collectible : owned) {
+            for (OwnedCoin collectible : owned) {
                 if (collectible.slot() == selectedConvertSlot) {
                     found = true;
                     break;
@@ -447,14 +466,14 @@ public final class FinanceScreen extends Screen {
         int maxScroll = Math.max(0, owned.size() - rows);
         convertScroll = Mth.clamp(convertScroll, 0, maxScroll);
 
-        OwnedCollectible hovered = null;
+        OwnedCoin hovered = null;
         graphics.enableScissor(x, top, x + totalW, bottom);
         for (int row = 0; row < rows; row++) {
             int index = convertScroll + row;
             if (index >= owned.size()) {
                 break;
             }
-            OwnedCollectible collectible = owned.get(index);
+            OwnedCoin collectible = owned.get(index);
             int rowY = top + row * CONVERT_ROW_H;
             boolean selected = collectible.slot() == selectedConvertSlot;
 
@@ -464,21 +483,21 @@ public final class FinanceScreen extends Screen {
                 graphics.renderOutline(x, rowY, totalW, CONVERT_ROW_H - 2, 0xFF55AAFF);
             }
 
-            graphics.renderFakeItem(new ItemStack(collectible.tier().item()), x + 4, rowY + 5);
-            graphics.drawString(font, collectible.tier().displayName().getString(),
+            graphics.renderFakeItem(collectible.view().icon(), x + 4, rowY + 5);
+            graphics.drawString(font, collectible.view().name().getString(),
                     x + 24, rowY + 3, 0xFFFFFFFF, false);
 
-            String description = collectible.info() != null ? collectible.info().description() : "";
+            String description = collectible.view().info() != null ? collectible.view().info().description() : "";
             if (description.isBlank()) {
                 description = Component.translatable("screen.simplefinances.collection.no_description").getString();
             }
             graphics.drawString(font, trim(description, totalW - 150), x + 24, rowY + 14, 0xFFAAAAAA, false);
 
-            String value = "+" + Money.format(collectible.tier().conversionValue());
+            String value = "+" + Money.format(collectible.view().value());
             graphics.drawString(font, value, x + totalW - font.width(value) - 6, rowY + 3,
                     0xFFFFD700, false);
 
-            String date = collectible.info() != null ? collectible.info().date() : "";
+            String date = collectible.view().info() != null ? collectible.view().info().date() : "";
             if (!date.isBlank()) {
                 String trimmed = trim(date, 80);
                 graphics.drawString(font, trimmed, x + totalW - font.width(trimmed) - 6,
@@ -495,11 +514,11 @@ public final class FinanceScreen extends Screen {
                 rows, owned.size());
 
         if (selectedConvertSlot >= 0) {
-            for (OwnedCollectible collectible : owned) {
+            for (OwnedCoin collectible : owned) {
                 if (collectible.slot() == selectedConvertSlot) {
                     graphics.drawString(font, Component.translatable("screen.simplefinances.conversion.selected",
-                                    collectible.tier().displayName(),
-                                    Money.format(collectible.tier().conversionValue())),
+                                    collectible.view().name(),
+                                    Money.format(collectible.view().value())),
                             x + 160, panelY + panelH - 21, 0xFFAAAAAA, false);
                     break;
                 }
@@ -508,25 +527,26 @@ public final class FinanceScreen extends Screen {
 
         if (hovered != null) {
             List<Component> tooltip = new ArrayList<>();
-            tooltip.add(hovered.tier().displayName());
-            if (hovered.info() != null) {
-                if (!hovered.info().description().isBlank()) {
+            tooltip.add(hovered.view().name());
+            CollectibleInfo info = hovered.view().info();
+            if (info != null) {
+                if (!info.description().isBlank()) {
                     tooltip.add(Component.translatable("tooltip.simplefinances.collectible.description",
-                            hovered.info().description()));
+                            info.description()));
                 }
-                if (!hovered.info().date().isBlank()) {
+                if (!info.date().isBlank()) {
                     tooltip.add(Component.translatable("tooltip.simplefinances.collectible.date",
-                            hovered.info().date()));
+                            info.date()));
                 }
-                if (!hovered.info().recipient().isBlank()) {
+                if (!info.recipient().isBlank()) {
                     tooltip.add(Component.translatable("tooltip.simplefinances.collectible.recipient",
-                            hovered.info().recipient()));
+                            info.recipient()));
                 }
             } else {
                 tooltip.add(Component.translatable("tooltip.simplefinances.collectible.blank"));
             }
             tooltip.add(Component.translatable("screen.simplefinances.conversion.value",
-                    Money.format(hovered.tier().conversionValue())));
+                    Money.format(hovered.view().value())));
             graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
         }
     }
@@ -570,11 +590,11 @@ public final class FinanceScreen extends Screen {
             int cellX = x + (i % cols) * COLLECTION_CELL;
             int cellY = top + (i / cols) * COLLECTION_CELL;
             CollectionPayload.EntryView entry = entries.get(index);
-            CollectibleTier tier = CollectibleTier.byId(entry.tier());
+            CoinView view = CoinView.fromAlbumKey(entry.tier());
 
             graphics.fill(cellX + 1, cellY + 1, cellX + COLLECTION_CELL - 1,
                     cellY + COLLECTION_CELL - 1, 0x20FFFFFF);
-            graphics.renderFakeItem(new ItemStack(tier.item()), cellX + 4, cellY + 4);
+            graphics.renderFakeItem(view.icon(), cellX + 4, cellY + 4);
 
             if (mouseX >= cellX && mouseX < cellX + COLLECTION_CELL
                     && mouseY >= cellY && mouseY < cellY + COLLECTION_CELL) {
@@ -591,9 +611,9 @@ public final class FinanceScreen extends Screen {
                 panelX + 190, panelY + panelH - 21, 0xFFAAAAAA, false);
 
         if (hovered != null) {
-            CollectibleTier tier = CollectibleTier.byId(hovered.tier());
+            CoinView view = CoinView.fromAlbumKey(hovered.tier());
             List<Component> tooltip = new ArrayList<>();
-            tooltip.add(tier.displayName());
+            tooltip.add(view.name());
             tooltip.add(Component.translatable("screen.simplefinances.collection.added_by", hovered.addedBy()));
             tooltip.add(Component.translatable("screen.simplefinances.collection.description",
                     hovered.description().isBlank()
@@ -795,7 +815,7 @@ public final class FinanceScreen extends Screen {
             int top = conversionTop();
             int bottom = conversionBottom();
             if (mouseX >= x && mouseX <= x + totalW && mouseY >= top && mouseY < bottom) {
-                List<OwnedCollectible> owned = ownedCollectibles();
+                List<OwnedCoin> owned = ownedCollectibles();
                 int row = (int) ((mouseY - top) / CONVERT_ROW_H) + convertScroll;
                 if (row >= 0 && row < owned.size()) {
                     selectedConvertSlot = owned.get(row).slot();
@@ -831,12 +851,7 @@ public final class FinanceScreen extends Screen {
     // ------------------------------------------------------------------
 
     private int contentTop() {
-        return panelY + 52;
-    }
-
-    private int tabWidth() {
-        int count = Math.max(1, visibleTabs().size());
-        return (panelW - 24 - (count - 1) * 4) / count;
+        return panelY + 24 + tabRows * 20 + 8;
     }
 
     private List<Tab> visibleTabs() {
@@ -865,18 +880,17 @@ public final class FinanceScreen extends Screen {
         return panelY + panelH - 32;
     }
 
-    private List<OwnedCollectible> ownedCollectibles() {
-        List<OwnedCollectible> result = new ArrayList<>();
+    private List<OwnedCoin> ownedCollectibles() {
+        List<OwnedCoin> result = new ArrayList<>();
         Player player = minecraft == null ? null : minecraft.player;
         if (player == null) {
             return result;
         }
         Inventory inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            if (stack.getItem() instanceof CollectibleCoinItem coin) {
-                CollectibleInfo info = stack.get(ModComponents.COLLECTIBLE_INFO);
-                result.add(new OwnedCollectible(slot, coin.tier(), info));
+            CoinView view = CoinView.of(inventory.getItem(slot));
+            if (view != null) {
+                result.add(new OwnedCoin(slot, view));
             }
         }
         return result;
@@ -1036,7 +1050,7 @@ public final class FinanceScreen extends Screen {
     private static final Predicate<String> RECIPIENTS = value -> value.matches("[A-Za-z0-9_, ]{0,200}");
     private static final Predicate<String> ANY = value -> true;
 
-    private record OwnedCollectible(int slot, CollectibleTier tier, CollectibleInfo info) {
+    private record OwnedCoin(int slot, CoinView view) {
     }
 
     private enum Tab {

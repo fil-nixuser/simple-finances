@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One page of the shared, read-only collection of collectible coins donated by players.
+ * One page of the server-wide, read-only collection of collectible coins.
  */
 public record CollectionPayload(int page, int pageCount, int total, List<EntryView> entries)
         implements CustomPacketPayload {
@@ -23,7 +23,7 @@ public record CollectionPayload(int page, int pageCount, int total, List<EntryVi
                 buf.writeVarInt(payload.total);
                 buf.writeVarInt(payload.entries.size());
                 for (EntryView entry : payload.entries) {
-                    buf.writeUtf(entry.tier, 16);
+                    buf.writeUtf(entry.tier, 48);
                     buf.writeUtf(entry.description, 200);
                     buf.writeUtf(entry.date, 64);
                     buf.writeUtf(entry.recipient, 64);
@@ -39,7 +39,7 @@ public record CollectionPayload(int page, int pageCount, int total, List<EntryVi
                 List<EntryView> entries = new ArrayList<>(count);
                 for (int i = 0; i < count; i++) {
                     entries.add(new EntryView(
-                            buf.readUtf(16),
+                            buf.readUtf(48),
                             buf.readUtf(200),
                             buf.readUtf(64),
                             buf.readUtf(64),

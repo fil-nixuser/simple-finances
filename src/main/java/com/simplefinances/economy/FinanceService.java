@@ -1,6 +1,6 @@
 package com.simplefinances.economy;
 
-import com.simplefinances.item.CollectibleCoinItem;
+import com.simplefinances.item.CoinView;
 import com.simplefinances.item.CollectibleInfo;
 import com.simplefinances.item.CollectibleTier;
 import com.simplefinances.net.ActionPayload;
@@ -322,7 +322,7 @@ public final class FinanceService {
     /**
      * Converts one collectible coin from the player's inventory into account money.
      * The coin itself is removed forever and a copy of its award data is added to
-     * the shared server collection.
+     * the server-wide collection.
      */
     public static void convertCollectible(ServerPlayer player, int slot) {
         FinanceData data = data(player);
@@ -344,7 +344,7 @@ public final class FinanceService {
         }
 
         player.displayClientMessage(Component.translatable("message.simplefinances.converted",
-                        Money.format(conversion.value()), conversion.tier().displayName())
+                        Money.format(conversion.value()), conversion.name())
                 .withStyle(ChatFormatting.GREEN), true);
         sendState(player, false);
         sendCollection(player);
@@ -357,15 +357,14 @@ public final class FinanceService {
         }
 
         ItemStack stack = inventory.getItem(slot);
-        if (stack.isEmpty() || !(stack.getItem() instanceof CollectibleCoinItem coin)) {
+        CoinView view = CoinView.of(stack);
+        if (view == null) {
             return null;
         }
 
-        CollectibleTier tier = coin.tier();
-        CollectibleInfo info = stack.get(ModComponents.COLLECTIBLE_INFO);
         inventory.removeItem(slot, 1);
 
-        long value = tier.conversionValue();
+        long value = view.value();
         long newBalance = account.balance() + value;
         if (newBalance < account.balance()) {
             newBalance = Long.MAX_VALUE;
@@ -373,18 +372,18 @@ public final class FinanceService {
         account.setBalance(newBalance);
 
         String playerName = player.getGameProfile().getName();
-        String description = info == null ? "" : info.description().trim();
+        String description = view.info() == null ? "" : view.info().description().trim();
         if (description.length() > 200) {
             description = description.substring(0, 200);
         }
-        String date = info == null ? "" : info.date().trim();
+        String date = view.info() == null ? "" : view.info().date().trim();
         if (date.isEmpty()) {
             date = LocalDate.now().format(DATE_FORMAT);
         }
         if (date.length() > 64) {
             date = date.substring(0, 64);
         }
-        String recipient = info == null ? "" : info.recipient().trim();
+        String recipient = view.info() == null ? "" : view.info().recipient().trim();
         if (recipient.isEmpty()) {
             recipient = playerName;
         }
@@ -392,16 +391,16 @@ public final class FinanceService {
             recipient = recipient.substring(0, 64);
         }
 
-        data.addCollectionEntry(new CollectionEntry(tier.id(), description, date, recipient, playerName, now));
-        String note = tier.id() + (description.isEmpty() ? "" : ": " + description);
+        data.addCollectionEntry(new CollectionEntry(view.albumKey(), description, date, recipient, playerName, now));
+        String note = view.albumKey() + (description.isEmpty() ? "" : ": " + description);
         data.addTransaction(new Transaction(Transaction.Type.CONVERT, now,
                 playerName, "", value, 0L, note));
         data.setDirty();
 
-        return new Conversion(tier, value);
+        return new Conversion(view.name(), value);
     }
 
-    record Conversion(CollectibleTier tier, long value) {
+    record Conversion(Component name, long value) {
     }
 
     // ------------------------------------------------------------------

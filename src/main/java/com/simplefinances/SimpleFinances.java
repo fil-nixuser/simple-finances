@@ -2,6 +2,8 @@ package com.simplefinances;
 
 import com.simplefinances.command.FinanceCommands;
 import com.simplefinances.economy.FinanceService;
+import com.simplefinances.event.CauldronWashing;
+import com.simplefinances.loot.LootInjections;
 import com.simplefinances.net.ModNetwork;
 import com.simplefinances.registry.ModComponents;
 import com.simplefinances.registry.ModItems;
@@ -27,6 +29,8 @@ public final class SimpleFinances implements ModInitializer {
         ModRecipes.init();
         ModNetwork.init();
         FinanceCommands.init();
+        LootInjections.init();
+        CauldronWashing.init();
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 FinanceService.onJoin(handler.getPlayer()));
