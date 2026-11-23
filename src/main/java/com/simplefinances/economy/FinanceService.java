@@ -99,14 +99,13 @@ public final class FinanceService {
     public static void sendCollection(ServerPlayer player, int page, String filter) {
         FinanceData data = data(player);
         String rawFilter = filter == null ? "" : filter.trim().toLowerCase(Locale.ROOT);
-        if (rawFilter.length() > 16) {
-            rawFilter = rawFilter.substring(0, 16);
+        if (rawFilter.length() > 64) {
+            rawFilter = rawFilter.substring(0, 64);
         }
         final String safeFilter = rawFilter;
 
         List<CollectionEntry> matches = data.collectionEntries().stream()
-                .filter(entry -> safeFilter.isEmpty()
-                        || entry.addedBy().toLowerCase(Locale.ROOT).contains(safeFilter))
+                .filter(entry -> matchesCollectionFilter(entry, safeFilter))
                 .collect(Collectors.toList());
 
         int total = matches.size();
@@ -695,6 +694,25 @@ public final class FinanceService {
 
     private static void error(ServerPlayer player, String key, Object... args) {
         player.sendSystemMessage(Component.translatable(key, args).withStyle(ChatFormatting.RED));
+    }
+
+    private static boolean matchesCollectionFilter(CollectionEntry entry, String filter) {
+        if (filter.isEmpty()) {
+            return true;
+        }
+        if (containsIgnoreCase(entry.addedBy(), filter)
+                || containsIgnoreCase(entry.recipient(), filter)
+                || containsIgnoreCase(entry.description(), filter)
+                || containsIgnoreCase(entry.date(), filter)
+                || containsIgnoreCase(entry.tier(), filter)) {
+            return true;
+        }
+        CoinView view = CoinView.fromAlbumKey(entry.tier());
+        return containsIgnoreCase(view.name().getString(), filter);
+    }
+
+    private static boolean containsIgnoreCase(String value, String filter) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(filter);
     }
 
     private static String formatDate(long epochMillis) {

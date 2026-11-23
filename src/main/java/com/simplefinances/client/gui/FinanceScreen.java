@@ -257,8 +257,8 @@ public final class FinanceScreen extends Screen {
     private void initCollection() {
         int x = panelX + 16;
         int y = contentTop();
-        collectionFilter = addEditBox(x + 88, y + 11, 140, 16,
-                "screen.simplefinances.collection.filter", 16, PLAYER_NAME);
+        collectionFilter = addEditBox(x, y + 12, 160, 16,
+                "screen.simplefinances.collection.search", 64, ANY);
         collectionFilter.setResponder(value -> {
             collectionScroll = 0;
             send(ActionPayload.requestCollection(0, value));
@@ -572,8 +572,7 @@ public final class FinanceScreen extends Screen {
 
         graphics.drawString(font, Component.translatable("screen.simplefinances.collection.title",
                 collection.total()), x, y, 0xFFFFD700, false);
-        graphics.drawString(font, Component.translatable("screen.simplefinances.collection.filter"),
-                x, y + 14, 0xFFCCCCCC, false);
+        // No label: the search box is the filter.
         updatePageButtons();
 
         int top = collectionTop();
