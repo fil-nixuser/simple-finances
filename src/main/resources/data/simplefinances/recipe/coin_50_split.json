@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "simplefinances:coin_50"
+    }
+  ],
+  "result": {
+    "id": "simplefinances:coin_1",
+    "count": 50
+  }
+}
