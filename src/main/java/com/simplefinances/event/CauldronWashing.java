@@ -51,7 +51,9 @@ public final class CauldronWashing {
         }
 
         ItemStack reward = new ItemStack(coin);
-        player.getInventory().placeItemBackInInventory(reward);
+        if (!player.getInventory().add(reward) && !reward.isEmpty()) {
+            player.drop(reward, false);
+        }
         world.playSound(null, hitResult.getBlockPos(), SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, 1.0F, 1.0F);
         return InteractionResult.SUCCESS;
     }

@@ -245,6 +245,11 @@ public final class FinanceScreen extends Screen {
                         selectedConvertSlot = -1;
                     }
                 });
+        addButton(panelX + 172, panelY + panelH - 26, 110, 18,
+                Component.translatable("screen.simplefinances.conversion.convert_all"), button -> {
+                    send(ActionPayload.convertAllCollectibles());
+                    selectedConvertSlot = -1;
+                });
         convertButton.active = selectedConvertSlot >= 0;
     }
 

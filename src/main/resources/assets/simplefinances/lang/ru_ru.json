@@ -114,6 +114,7 @@
   "screen.simplefinances.conversion.hint": "Монета исчезнет и попадёт в общую коллекцию сервера. Обратно её получить нельзя. Деньги сразу зачисляются на баланс без комиссии.",
   "screen.simplefinances.conversion.empty": "У вас нет монет для обмена",
   "screen.simplefinances.conversion.convert": "Конвертировать",
+  "screen.simplefinances.conversion.convert_all": "Конвертировать все",
   "screen.simplefinances.conversion.selected": "Выбрано: %s (+%s)",
   "screen.simplefinances.conversion.value": "Даёт %s монет",
 
@@ -172,6 +173,7 @@
   "message.simplefinances.collectible_received": "Получена коллекционная монета: %s",
   "message.simplefinances.collectible_given": "Выдано монет: %s (%s)",
   "message.simplefinances.converted": "Монета обменяна: +%s монет (%s)",
+  "message.simplefinances.converted_all": "Конвертировано монет: %s (+%s)",
   "message.simplefinances.washed": "Получена монета: %s",
   "message.simplefinances.collectible.broadcast": "%s выдал коллекционную монету (%s): %s",
   "message.simplefinances.collectible.broadcast_all": "%s выдал коллекционную монету (%s) всем игрокам",

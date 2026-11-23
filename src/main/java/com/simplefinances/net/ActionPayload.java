@@ -74,6 +74,10 @@ public record ActionPayload(Action action, long amount, String target, String te
         return new ActionPayload(Action.CONVERT_COLLECTIBLE, slot, "", "", 0, 0L, 0);
     }
 
+    public static ActionPayload convertAllCollectibles() {
+        return new ActionPayload(Action.CONVERT_ALL_COLLECTIBLES, 0L, "", "", 0, 0L, 0);
+    }
+
     public static ActionPayload requestCollection() {
         return requestCollection(0);
     }
@@ -97,6 +101,7 @@ public record ActionPayload(Action action, long amount, String target, String te
         ADMIN_COLLECTIBLE,
         ADMIN_CONFIG,
         CONVERT_COLLECTIBLE,
+        CONVERT_ALL_COLLECTIBLES,
         REQUEST_COLLECTION;
 
         public static Action byIndex(int index) {
