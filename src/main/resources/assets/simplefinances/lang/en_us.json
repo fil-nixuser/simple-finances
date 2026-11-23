@@ -114,6 +114,7 @@
   "screen.simplefinances.conversion.hint": "The coin disappears into the server collection and cannot be taken back. Money is credited to your balance with no fee.",
   "screen.simplefinances.conversion.empty": "You have no coins to convert",
   "screen.simplefinances.conversion.convert": "Convert",
+  "screen.simplefinances.conversion.convert_all": "Convert all",
   "screen.simplefinances.conversion.selected": "Selected: %s (+%s)",
   "screen.simplefinances.conversion.value": "Worth %s coins",
 
@@ -172,6 +173,7 @@
   "message.simplefinances.collectible_received": "Received collectible coin: %s",
   "message.simplefinances.collectible_given": "Given %s coin(s) (%s)",
   "message.simplefinances.converted": "Coin converted: +%s coins (%s)",
+  "message.simplefinances.converted_all": "Converted %s coins (+%s)",
   "message.simplefinances.washed": "Coin received: %s",
   "message.simplefinances.collectible.broadcast": "%s awarded a collectible coin (%s) to %s",
   "message.simplefinances.collectible.broadcast_all": "%s awarded a collectible coin (%s) to all players",

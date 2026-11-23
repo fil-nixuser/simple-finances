@@ -83,6 +83,7 @@ public final class FinanceService {
                     payload.target(), payload.flag() == 1);
             case ADMIN_CONFIG -> configure(player, (int) payload.amount(), (int) payload.duration());
             case CONVERT_COLLECTIBLE -> convertCollectible(player, (int) payload.amount());
+            case CONVERT_ALL_COLLECTIBLES -> convertAllCollectibles(player);
             case REQUEST_COLLECTION -> sendCollection(player, (int) payload.amount());
         }
     }
@@ -345,6 +346,45 @@ public final class FinanceService {
 
         player.displayClientMessage(Component.translatable("message.simplefinances.converted",
                         Money.format(conversion.value()), conversion.name())
+                .withStyle(ChatFormatting.GREEN), true);
+        sendState(player, false);
+        sendCollection(player);
+    }
+
+    public static void convertAllCollectibles(ServerPlayer player) {
+        FinanceData data = data(player);
+        Account account = account(data, player);
+        long now = System.currentTimeMillis();
+        account.clearExpiredBlock(now);
+
+        if (account.isBlocked(now)) {
+            error(player, "message.simplefinances.error.blocked", formatDate(account.blockedUntil()));
+            sendState(player, false);
+            return;
+        }
+
+        int convertedCount = 0;
+        long totalValue = 0L;
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            while (CoinView.of(inventory.getItem(slot)) != null) {
+                Conversion conversion = applyConversion(data, account, player, slot, now);
+                if (conversion == null) {
+                    break;
+                }
+                convertedCount++;
+                totalValue += conversion.value();
+            }
+        }
+
+        if (convertedCount <= 0) {
+            error(player, "message.simplefinances.error.no_collectible");
+            sendState(player, false);
+            return;
+        }
+
+        player.displayClientMessage(Component.translatable("message.simplefinances.converted_all",
+                        convertedCount, Money.format(totalValue))
                 .withStyle(ChatFormatting.GREEN), true);
         sendState(player, false);
         sendCollection(player);
