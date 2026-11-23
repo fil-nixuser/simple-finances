@@ -61,6 +61,7 @@ public final class FinanceScreen extends Screen {
     private int collectionScroll = 0;
     private Button prevPageButton;
     private Button nextPageButton;
+    private EditBox collectionFilter;
 
     private int panelX;
     private int panelY;
@@ -254,15 +255,23 @@ public final class FinanceScreen extends Screen {
     }
 
     private void initCollection() {
+        int x = panelX + 16;
+        int y = contentTop();
+        collectionFilter = addEditBox(x, y + 12, 160, 16,
+                "screen.simplefinances.collection.search", 64, ANY);
+        collectionFilter.setResponder(value -> {
+            collectionScroll = 0;
+            send(ActionPayload.requestCollection(0, value));
+        });
         prevPageButton = addButton(panelX + 16, panelY + panelH - 26, 28, 18,
                 Component.literal("<"), button ->
-                        send(ActionPayload.requestCollection(collection.page() - 1)));
+                        send(ActionPayload.requestCollection(collection.page() - 1, collectionFilterValue())));
         nextPageButton = addButton(panelX + 48, panelY + panelH - 26, 28, 18,
                 Component.literal(">"), button ->
-                        send(ActionPayload.requestCollection(collection.page() + 1)));
+                        send(ActionPayload.requestCollection(collection.page() + 1, collectionFilterValue())));
         addButton(panelX + 80, panelY + panelH - 26, 100, 18,
                 Component.translatable("screen.simplefinances.collection.refresh"),
-                button -> send(ActionPayload.requestCollection(collection.page())));
+                button -> send(ActionPayload.requestCollection(collection.page(), collectionFilterValue())));
         updatePageButtons();
     }
 
@@ -563,17 +572,18 @@ public final class FinanceScreen extends Screen {
 
         graphics.drawString(font, Component.translatable("screen.simplefinances.collection.title",
                 collection.total()), x, y, 0xFFFFD700, false);
-        graphics.drawString(font, Component.translatable("screen.simplefinances.collection.hint"),
-                x, y + 12, 0xFF777777, false);
+        // No label: the search box is the filter.
         updatePageButtons();
 
         int top = collectionTop();
         int bottom = collectionBottom();
-        List<CollectionPayload.EntryView> entries = collection.entries();
+        List<CollectionPayload.EntryView> entries = filteredCollectionEntries();
 
         if (entries.isEmpty()) {
-            graphics.drawCenteredString(font, Component.translatable("screen.simplefinances.collection.empty"),
-                    panelX + panelW / 2, top + 12, 0xFF888888);
+            Component empty = collectionFilter != null && !collectionFilter.getValue().trim().isEmpty()
+                    ? Component.translatable("screen.simplefinances.collection.filter_empty")
+                    : Component.translatable("screen.simplefinances.collection.empty");
+            graphics.drawCenteredString(font, empty, panelX + panelW / 2, top + 12, 0xFF888888);
             return;
         }
 
@@ -619,7 +629,8 @@ public final class FinanceScreen extends Screen {
             CoinView view = CoinView.fromAlbumKey(hovered.tier());
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(view.name());
-            tooltip.add(Component.translatable("screen.simplefinances.collection.added_by", hovered.addedBy()));
+            tooltip.add(Component.translatable("screen.simplefinances.collection.added_by",
+                    Component.literal(hovered.addedBy()).withStyle(ChatFormatting.ITALIC)));
             tooltip.add(Component.translatable("screen.simplefinances.collection.description",
                     hovered.description().isBlank()
                             ? Component.translatable("screen.simplefinances.collection.no_description")
@@ -627,7 +638,7 @@ public final class FinanceScreen extends Screen {
             tooltip.add(Component.translatable("screen.simplefinances.collection.date", hovered.date()));
             if (!hovered.recipient().isBlank()) {
                 tooltip.add(Component.translatable("screen.simplefinances.collection.recipient",
-                        hovered.recipient()));
+                        Component.literal(hovered.recipient()).withStyle(ChatFormatting.ITALIC)));
             }
             tooltip.add(Component.translatable("screen.simplefinances.collection.added_at",
                     formatDateTime(hovered.addedAt())));
@@ -878,11 +889,19 @@ public final class FinanceScreen extends Screen {
     }
 
     private int collectionTop() {
-        return contentTop() + 26;
+        return contentTop() + 32;
     }
 
     private int collectionBottom() {
         return panelY + panelH - 32;
+    }
+
+    private String collectionFilterValue() {
+        return collectionFilter == null ? "" : collectionFilter.getValue().trim();
+    }
+
+    private List<CollectionPayload.EntryView> filteredCollectionEntries() {
+        return collection.entries();
     }
 
     private List<OwnedCoin> ownedCollectibles() {

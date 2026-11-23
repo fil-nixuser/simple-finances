@@ -79,11 +79,19 @@ public record ActionPayload(Action action, long amount, String target, String te
     }
 
     public static ActionPayload requestCollection() {
-        return requestCollection(0);
+        return requestCollection(0, "");
     }
 
     public static ActionPayload requestCollection(int page) {
-        return new ActionPayload(Action.REQUEST_COLLECTION, Math.max(0, page), "", "", 0, 0L, 0);
+        return requestCollection(page, "");
+    }
+
+    public static ActionPayload requestCollection(int page, String filter) {
+        String safeFilter = filter == null ? "" : filter.trim();
+        if (safeFilter.length() > 64) {
+            safeFilter = safeFilter.substring(0, 64);
+        }
+        return new ActionPayload(Action.REQUEST_COLLECTION, Math.max(0, page), safeFilter, "", 0, 0L, 0);
     }
 
     @Override

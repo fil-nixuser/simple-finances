@@ -84,20 +84,36 @@ public final class FinanceService {
             case ADMIN_CONFIG -> configure(player, (int) payload.amount(), (int) payload.duration());
             case CONVERT_COLLECTIBLE -> convertCollectible(player, (int) payload.amount());
             case CONVERT_ALL_COLLECTIBLES -> convertAllCollectibles(player);
-            case REQUEST_COLLECTION -> sendCollection(player, (int) payload.amount());
+            case REQUEST_COLLECTION -> sendCollection(player, (int) payload.amount(), payload.target());
         }
     }
 
     public static void sendCollection(ServerPlayer player) {
-        sendCollection(player, 0);
+        sendCollection(player, 0, "");
     }
 
     public static void sendCollection(ServerPlayer player, int page) {
+        sendCollection(player, page, "");
+    }
+
+    public static void sendCollection(ServerPlayer player, int page, String filter) {
         FinanceData data = data(player);
-        int total = data.collectionSize();
+        String rawFilter = filter == null ? "" : filter.trim().toLowerCase(Locale.ROOT);
+        if (rawFilter.length() > 64) {
+            rawFilter = rawFilter.substring(0, 64);
+        }
+        final String safeFilter = rawFilter;
+
+        List<CollectionEntry> matches = data.collectionEntries().stream()
+                .filter(entry -> matchesCollectionFilter(entry, safeFilter))
+                .collect(Collectors.toList());
+
+        int total = matches.size();
         int pageCount = Math.max(1, (total + COLLECTION_PAGE_SIZE - 1) / COLLECTION_PAGE_SIZE);
         int safePage = Math.max(0, Math.min(page, pageCount - 1));
-        List<CollectionPayload.EntryView> views = data.collectionPage(safePage, COLLECTION_PAGE_SIZE).stream()
+        int from = safePage * COLLECTION_PAGE_SIZE;
+        int to = Math.min(total, from + COLLECTION_PAGE_SIZE);
+        List<CollectionPayload.EntryView> views = matches.subList(from, to).stream()
                 .map(CollectionPayload.EntryView::from)
                 .collect(Collectors.toList());
         ModNetwork.sendToPlayer(player, new CollectionPayload(safePage, pageCount, total, views));
@@ -678,6 +694,25 @@ public final class FinanceService {
 
     private static void error(ServerPlayer player, String key, Object... args) {
         player.sendSystemMessage(Component.translatable(key, args).withStyle(ChatFormatting.RED));
+    }
+
+    private static boolean matchesCollectionFilter(CollectionEntry entry, String filter) {
+        if (filter.isEmpty()) {
+            return true;
+        }
+        if (containsIgnoreCase(entry.addedBy(), filter)
+                || containsIgnoreCase(entry.recipient(), filter)
+                || containsIgnoreCase(entry.description(), filter)
+                || containsIgnoreCase(entry.date(), filter)
+                || containsIgnoreCase(entry.tier(), filter)) {
+            return true;
+        }
+        CoinView view = CoinView.fromAlbumKey(entry.tier());
+        return containsIgnoreCase(view.name().getString(), filter);
+    }
+
+    private static boolean containsIgnoreCase(String value, String filter) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(filter);
     }
 
     private static String formatDate(long epochMillis) {
