@@ -629,7 +629,8 @@ public final class FinanceScreen extends Screen {
             CoinView view = CoinView.fromAlbumKey(hovered.tier());
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(view.name());
-            tooltip.add(Component.translatable("screen.simplefinances.collection.added_by", hovered.addedBy()));
+            tooltip.add(Component.translatable("screen.simplefinances.collection.added_by",
+                    Component.literal(hovered.addedBy()).withStyle(ChatFormatting.ITALIC)));
             tooltip.add(Component.translatable("screen.simplefinances.collection.description",
                     hovered.description().isBlank()
                             ? Component.translatable("screen.simplefinances.collection.no_description")
@@ -637,7 +638,7 @@ public final class FinanceScreen extends Screen {
             tooltip.add(Component.translatable("screen.simplefinances.collection.date", hovered.date()));
             if (!hovered.recipient().isBlank()) {
                 tooltip.add(Component.translatable("screen.simplefinances.collection.recipient",
-                        hovered.recipient()));
+                        Component.literal(hovered.recipient()).withStyle(ChatFormatting.ITALIC)));
             }
             tooltip.add(Component.translatable("screen.simplefinances.collection.added_at",
                     formatDateTime(hovered.addedAt())));
