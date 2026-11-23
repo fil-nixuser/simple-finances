@@ -143,7 +143,7 @@ public final class FinanceData extends SavedData {
     }
 
     /**
-     * Adds a donated collectible to the shared, read-only collection.
+     * Adds a converted collectible to the server-wide, read-only collection.
      * Newest entries are first.
      */
     public void addCollectionEntry(CollectionEntry entry) {
