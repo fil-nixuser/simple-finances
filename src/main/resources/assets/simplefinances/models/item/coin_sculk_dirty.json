@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "simplefinances:item/clump_warden"
+    "layer0": "simplefinances:item/coin_sculk_dirty"
   }
 }

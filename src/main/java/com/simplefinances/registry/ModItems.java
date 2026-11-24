@@ -1,13 +1,13 @@
 package com.simplefinances.registry;
 
 import com.simplefinances.SimpleFinances;
+import com.simplefinances.item.BiomeCoinItem;
 import com.simplefinances.item.ClumpItem;
+import com.simplefinances.item.CoinBiome;
 import com.simplefinances.item.CoinCondition;
-import com.simplefinances.item.CoinSeries;
 import com.simplefinances.item.CoinItem;
 import com.simplefinances.item.CollectibleCoinItem;
 import com.simplefinances.item.CollectibleTier;
-import com.simplefinances.item.SeriesCoinItem;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,8 +22,8 @@ import java.util.EnumMap;
 import java.util.Map;
 
 public final class ModItems {
-    private static final Map<CoinSeries, Map<CoinCondition, Item>> COINS = new EnumMap<>(CoinSeries.class);
-    private static final Map<CoinSeries, Item> CLUMPS = new EnumMap<>(CoinSeries.class);
+    private static final Map<CoinBiome, Map<CoinCondition, Item>> COINS = new EnumMap<>(CoinBiome.class);
+    private static final Map<CoinBiome, Item> CLUMPS = new EnumMap<>(CoinBiome.class);
 
     public static final Item COIN_1 = register("coin_1",
             new CoinItem("tooltip.simplefinances.coin_1", new Item.Properties().stacksTo(64)));
@@ -43,19 +43,19 @@ public final class ModItems {
             new CollectibleCoinItem(CollectibleTier.PEARL,
                     new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
-    // ---------------------------------------------------------------- series coins
+    // ---------------------------------------------------------------- biome coins
 
     static {
-        for (CoinSeries series : CoinSeries.values()) {
-            if (series.hellish()) {
-                registerCoin(series, CoinCondition.PERFECT);
+        for (CoinBiome biome : CoinBiome.values()) {
+            if (biome.nether()) {
+                registerCoin(biome, CoinCondition.PERFECT);
             } else {
                 for (CoinCondition condition : CoinCondition.values()) {
-                    registerCoin(series, condition);
+                    registerCoin(biome, condition);
                 }
             }
-            if (!series.hellish()) {
-                registerClump(series);
+            if (!biome.nether()) {
+                registerClump(biome);
             }
         }
     }
@@ -72,13 +72,13 @@ public final class ModItems {
                         output.accept(COLLECTIBLE_RUBY);
                         output.accept(COLLECTIBLE_SAPPHIRE);
                         output.accept(COLLECTIBLE_PEARL);
-                        for (CoinSeries series : CoinSeries.values()) {
-                            for (Item item : seriesCoins(series)) {
+                        for (CoinBiome biome : CoinBiome.values()) {
+                            for (Item item : biomeCoins(biome)) {
                                 output.accept(item);
                             }
                         }
-                        for (CoinSeries series : CoinSeries.values()) {
-                            Item clump = clump(series);
+                        for (CoinBiome biome : CoinBiome.values()) {
+                            Item clump = clump(biome);
                             if (clump != null) {
                                 output.accept(clump);
                             }
@@ -95,45 +95,45 @@ public final class ModItems {
         return Registry.register(BuiltInRegistries.ITEM, id, item);
     }
 
-    private static void registerCoin(CoinSeries series, CoinCondition condition) {
-        String name = "coin_" + series.id() + (series.hellish() ? "" : "_" + condition.id());
+    private static void registerCoin(CoinBiome biome, CoinCondition condition) {
+        String name = "coin_" + biome.id() + (biome.nether() ? "" : "_" + condition.id());
         Rarity rarity = switch (condition) {
             case DIRTY -> Rarity.COMMON;
             case SLIGHTLY_DIRTY -> Rarity.UNCOMMON;
             case PERFECT -> Rarity.EPIC;
         };
-        Item item = register(name, new SeriesCoinItem(series, condition,
+        Item item = register(name, new BiomeCoinItem(biome, condition,
                 new Item.Properties().stacksTo(64).rarity(rarity)));
-        COINS.computeIfAbsent(series, key -> new EnumMap<>(CoinCondition.class)).put(condition, item);
+        COINS.computeIfAbsent(biome, key -> new EnumMap<>(CoinCondition.class)).put(condition, item);
     }
 
-    private static void registerClump(CoinSeries series) {
-        Item item = register("clump_" + series.id(), new ClumpItem(series,
+    private static void registerClump(CoinBiome biome) {
+        Item item = register("clump_" + biome.id(), new ClumpItem(biome,
                 new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
-        CLUMPS.put(series, item);
+        CLUMPS.put(biome, item);
     }
 
     /**
-     * Returns the coin item for the given series and condition, or null if the
-     * combination does not exist (hellish coins are always perfect).
+     * Returns the coin item for the given biome and condition, or null if the
+     * combination does not exist (Nether coins are always perfect).
      */
-    public static Item coin(CoinSeries series, CoinCondition condition) {
-        if (series == null) {
+    public static Item coin(CoinBiome biome, CoinCondition condition) {
+        if (biome == null) {
             return null;
         }
-        Map<CoinCondition, Item> map = COINS.get(series);
+        Map<CoinCondition, Item> map = COINS.get(biome);
         if (map == null) {
             return null;
         }
-        return map.get(series.hellish() ? CoinCondition.PERFECT : condition);
+        return map.get(biome.nether() ? CoinCondition.PERFECT : condition);
     }
 
-    public static Item clump(CoinSeries series) {
-        return series == null ? null : CLUMPS.get(series);
+    public static Item clump(CoinBiome biome) {
+        return biome == null ? null : CLUMPS.get(biome);
     }
 
-    private static Iterable<Item> seriesCoins(CoinSeries series) {
-        Map<CoinCondition, Item> map = COINS.get(series);
+    private static Iterable<Item> biomeCoins(CoinBiome biome) {
+        Map<CoinCondition, Item> map = COINS.get(biome);
         return map == null ? java.util.List.of() : map.values();
     }
 

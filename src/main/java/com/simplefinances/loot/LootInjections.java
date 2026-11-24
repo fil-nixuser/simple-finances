@@ -1,8 +1,8 @@
 package com.simplefinances.loot;
 
 import com.simplefinances.SimpleFinances;
+import com.simplefinances.item.CoinBiome;
 import com.simplefinances.item.CoinCondition;
-import com.simplefinances.item.CoinSeries;
 import com.simplefinances.registry.ModItems;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Injects clumps and hellish coins into vanilla structure loot.
+ * Injects clumps and Nether coins into vanilla structure loot.
  * Every added pool rolls exactly once: a clump has the given percent chance,
  * otherwise the pool produces nothing.
  */
@@ -32,16 +32,16 @@ public final class LootInjections {
     }
 
     public static void init() {
-        addClump(CoinSeries.OCEANIC,
+        addClump(CoinBiome.OCEANIC,
                 "chests/shipwreck_treasure",
                 "chests/shipwreck_supply",
                 "chests/underwater_ruin_big",
                 "chests/underwater_ruin_small");
 
-        addClump(CoinSeries.END,
+        addClump(CoinBiome.END,
                 "chests/end_city_treasure");
 
-        addClump(CoinSeries.TRIAL,
+        addClump(CoinBiome.TRIAL,
                 "chests/trial_chambers/supply",
                 "chests/trial_chambers/corridor",
                 "chests/trial_chambers/entrance",
@@ -56,25 +56,25 @@ public final class LootInjections {
                 "chests/trial_chambers/reward_ominous_rare",
                 "chests/trial_chambers/reward_ominous_unique");
 
-        addClump(CoinSeries.WARDEN,
+        addClump(CoinBiome.SCULK,
                 "chests/ancient_city",
                 "chests/ancient_city_ice_box");
 
-        addCoin(CoinSeries.PIGLIN, 1,
+        addCoin(CoinBiome.BASTION, 1,
                 "chests/bastion_treasure",
                 "chests/bastion_other",
                 "chests/bastion_bridge",
                 "chests/bastion_hoglin_stable");
 
         // Every chest in a Nether Fortress uses this loot table.
-        addCoin(CoinSeries.FORTRESS, 1,
+        addCoin(CoinBiome.FORTRESS, 1,
                 "chests/nether_bridge");
 
-        addCoin(CoinSeries.NETHERITE, 5,
+        addCoin(CoinBiome.ANCIENT, 5,
                 "blocks/ancient_debris");
 
         // A rare oceanic clump can be pulled out while fishing (0.5% per catch).
-        addClump(CoinSeries.OCEANIC, 0.5,
+        addClump(CoinBiome.OCEANIC, 0.5,
                 "gameplay/fishing");
 
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
@@ -95,20 +95,20 @@ public final class LootInjections {
         SimpleFinances.LOGGER.info("Registered {} loot injection rules", RULES.size());
     }
 
-    private static void addClump(CoinSeries series, String... tables) {
-        addClump(series, 1, tables);
+    private static void addClump(CoinBiome biome, String... tables) {
+        addClump(biome, 1, tables);
     }
 
-    private static void addClump(CoinSeries series, double percent, String... tables) {
+    private static void addClump(CoinBiome biome, double percent, String... tables) {
         for (String table : tables) {
-            RULES.put(ResourceLocation.withDefaultNamespace(table), new Rule(() -> ModItems.clump(series), percent));
+            RULES.put(ResourceLocation.withDefaultNamespace(table), new Rule(() -> ModItems.clump(biome), percent));
         }
     }
 
-    private static void addCoin(CoinSeries series, double percent, String... tables) {
+    private static void addCoin(CoinBiome biome, double percent, String... tables) {
         for (String table : tables) {
             RULES.put(ResourceLocation.withDefaultNamespace(table), new Rule(
-                    () -> ModItems.coin(series, CoinCondition.PERFECT), percent));
+                    () -> ModItems.coin(biome, CoinCondition.PERFECT), percent));
         }
     }
 

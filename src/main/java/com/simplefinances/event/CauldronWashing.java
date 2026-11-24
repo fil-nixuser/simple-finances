@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
- * Washing a clump in a water cauldron yields a coin of the matching series.
+ * Washing a clump in a water cauldron yields a coin of the matching biome.
  * Water is not consumed and the cauldron can be reused indefinitely.
  */
 public final class CauldronWashing {
@@ -41,7 +41,7 @@ public final class CauldronWashing {
         }
 
         CoinCondition condition = rollCondition(player);
-        Item coin = ModItems.coin(clump.series(), condition);
+        Item coin = ModItems.coin(clump.biome(), condition);
         if (coin == null) {
             return InteractionResult.PASS;
         }

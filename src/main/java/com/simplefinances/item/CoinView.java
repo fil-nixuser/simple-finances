@@ -8,17 +8,17 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * A uniform view over every coin that can be converted: the old admin-awarded
- * collectibles and the new series coins. Used by the conversion logic, the
+ * collectibles and the new biome coins. Used by the conversion logic, the
  * wallet screen and the server collection.
  */
 public record CoinView(ItemStack icon, Component name, long value, String albumKey, CollectibleInfo info) {
     public static CoinView of(ItemStack stack) {
-        if (stack.getItem() instanceof SeriesCoinItem coin) {
+        if (stack.getItem() instanceof BiomeCoinItem coin) {
             return new CoinView(
                     stack.copyWithCount(1),
                     stack.getHoverName(),
                     coin.condition().conversionValue(),
-                    albumKey(coin.series(), coin.condition()),
+                    albumKey(coin.biome(), coin.condition()),
                     null
             );
         }
@@ -38,10 +38,10 @@ public record CoinView(ItemStack icon, Component name, long value, String albumK
     public static CoinView fromAlbumKey(String key) {
         int split = key == null ? -1 : key.indexOf(':');
         if (split > 0) {
-            CoinSeries series = CoinSeries.byId(key.substring(0, split));
+            CoinBiome biome = CoinBiome.byId(key.substring(0, split));
             CoinCondition condition = CoinCondition.byId(key.substring(split + 1));
-            if (series != null && condition != null) {
-                Item item = ModItems.coin(series, condition);
+            if (biome != null && condition != null) {
+                Item item = ModItems.coin(biome, condition);
                 if (item != null) {
                     ItemStack icon = new ItemStack(item);
                     return new CoinView(icon, icon.getHoverName(), condition.conversionValue(), key, null);
@@ -52,7 +52,7 @@ public record CoinView(ItemStack icon, Component name, long value, String albumK
         return new CoinView(new ItemStack(tier.item()), tier.displayName(), tier.conversionValue(), tier.id(), null);
     }
 
-    public static String albumKey(CoinSeries series, CoinCondition condition) {
-        return series.id() + ":" + condition.id();
+    public static String albumKey(CoinBiome biome, CoinCondition condition) {
+        return biome.id() + ":" + condition.id();
     }
 }

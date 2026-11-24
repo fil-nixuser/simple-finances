@@ -10,21 +10,21 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 /**
- * A coin of one of the seven series. Normal series have three wear states,
- * hellish series only ever exist in perfect condition.
+ * A coin of one of the seven biomes. Normal biomes have three wear states,
+ * Nether biomes only ever exist in perfect condition.
  */
-public class SeriesCoinItem extends Item {
-    private final CoinSeries series;
+public class BiomeCoinItem extends Item {
+    private final CoinBiome biome;
     private final CoinCondition condition;
 
-    public SeriesCoinItem(CoinSeries series, CoinCondition condition, Properties properties) {
+    public BiomeCoinItem(CoinBiome biome, CoinCondition condition, Properties properties) {
         super(properties);
-        this.series = series;
+        this.biome = biome;
         this.condition = condition;
     }
 
-    public CoinSeries series() {
-        return series;
+    public CoinBiome biome() {
+        return biome;
     }
 
     public CoinCondition condition() {
@@ -38,7 +38,7 @@ public class SeriesCoinItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (!series.hellish()) {
+        if (!biome.nether()) {
             tooltip.add(Component.translatable("tooltip.simplefinances.coin.condition", condition.displayName())
                     .withStyle(ChatFormatting.GRAY));
         }
@@ -47,8 +47,8 @@ public class SeriesCoinItem extends Item {
                 .withStyle(ChatFormatting.GOLD));
         tooltip.add(Component.translatable("tooltip.simplefinances.coin.convert_hint")
                 .withStyle(ChatFormatting.DARK_GRAY));
-        if (series.hellish()) {
-            tooltip.add(Component.translatable("tooltip.simplefinances.coin.hellish")
+        if (biome.nether()) {
+            tooltip.add(Component.translatable("tooltip.simplefinances.coin.nether")
                     .withStyle(ChatFormatting.DARK_RED));
         }
     }

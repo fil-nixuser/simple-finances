@@ -10,25 +10,25 @@ import java.util.List;
 
 /**
  * A dirty clump found in structure chests. Washing it in a water cauldron
- * yields a coin of the matching series.
+ * yields a coin of the matching biome.
  */
 public class ClumpItem extends Item {
-    private final CoinSeries series;
+    private final CoinBiome biome;
 
-    public ClumpItem(CoinSeries series, Properties properties) {
+    public ClumpItem(CoinBiome biome, Properties properties) {
         super(properties);
-        this.series = series;
+        this.biome = biome;
     }
 
-    public CoinSeries series() {
-        return series;
+    public CoinBiome biome() {
+        return biome;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.simplefinances.clump.series", series.displayName())
+        tooltip.add(Component.translatable("tooltip.simplefinances.clump.biome", biome.displayName())
                 .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("tooltip.simplefinances.clump.origin", series.originName())
+        tooltip.add(Component.translatable("tooltip.simplefinances.clump.origin", biome.originName())
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.simplefinances.clump.hint")
                 .withStyle(ChatFormatting.DARK_GRAY));
